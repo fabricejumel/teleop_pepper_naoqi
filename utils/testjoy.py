@@ -9,6 +9,7 @@ Show everything we can pull off the joystick
 import pygame
  
 # Define some colors
+
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
  
@@ -19,6 +20,7 @@ class TextPrint(object):
     It has nothing to do with the joysticks, just outputting the
     information.
     """
+
     def __init__(self):
         """ Constructor """
         self.reset()
@@ -55,7 +57,7 @@ screen = pygame.display.set_mode(size)
  
 pygame.display.set_caption("My Game")
  
-# Loop until the user clicks the close button.
+# Loop until the user clicks the c  lose button.
 done = False
  
 # Used to manage how fast the screen updates
@@ -76,10 +78,10 @@ while not done:
  
         # Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN
         # JOYBUTTONUP JOYHATMOTION
-        if event.type == pygame.JOYBUTTONDOWN:
-            print("Joystick button pressed.")
-        if event.type == pygame.JOYBUTTONUP:
-            print("Joystick button released.")
+        # if event.type == pygame.JOYBUTTONDOWN:
+        #     print("Joystick button pressed.")
+        # if event.type == pygame.JOYBUTTONUP:
+        #     print("Joystick button released.")
  
     # DRAWING STEP
     # First, clear the screen to white. Don't put other drawing commands

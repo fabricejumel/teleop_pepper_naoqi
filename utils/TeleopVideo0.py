@@ -17,12 +17,6 @@ import sys
 def bound(low, high, value):
     return max(low, min(high, value))
 
-def deadzone(low, value):
-    if abs(value) < low:
-        return 0
-    else:
-        return(value) 
-
 
 def main(session,joy_id,dir,name,quality):
     # Get the service ALTabletService.
@@ -30,7 +24,6 @@ def main(session,joy_id,dir,name,quality):
         basicAwareness=session.service("ALBasicAwareness")
         basicAwareness.setEnabled(False)
         almotion=session.service("ALMotion")
-        altext=session.service("ALTextToSpeech")
         almotion.setStiffnesses("Head", 1.0)
         alphoto=session.service("ALPhotoCapture")
         alphoto.setResolution(4)
@@ -46,7 +39,7 @@ def main(session,joy_id,dir,name,quality):
     except Exception, e:
         print "Error was: ", e
 	
-    almotion.wakeUp()
+
     names = ["HeadYaw","HeadPitch"]
     angles = [0,0]
     almotion.setAngles(names,angles,0.1)
@@ -61,8 +54,8 @@ def main(session,joy_id,dir,name,quality):
     #     alphoto.takePictures(1, dir, name2)
 
     
-    vrecorder.setFrameRate(10.0)
-    vrecorder.setResolution(quality) # 0 (QQVGA), 1 (QVGA) or 2 (VGA) , 2 Set resolution to VGA (640 x 480)
+    # vrecorder.setFrameRate(10.0)
+    # vrecorder.setResolution(quality) # 0 (QQVGA), 1 (QVGA) or 2 (VGA) , 2 Set resolution to VGA (640 x 480)
 
     # vrecorder.startRecording(dir, name)
     # print "Video record started."
@@ -124,14 +117,7 @@ def main(session,joy_id,dir,name,quality):
 
     joystick = pygame.joystick.Joystick(joy_id)
     joystick.init()
-    OMNI=0
-    CLASSIQUE=1
-    STOP = -1
-    mode = CLASSIQUE
-    start=0
-    stop=0
-    button_stop_old=0
-    button_start_old=0
+
     while not done:
 
 
@@ -148,69 +134,30 @@ def main(session,joy_id,dir,name,quality):
         minpitchRAD=-0.33
         maxpitchRAD=0.33
         
-        axis_yaw = joystick.get_axis(3)
-        axis_pitch = joystick.get_axis(4)
 
-        angle_yaw=angles[0]+epsilonyaw*axis_yaw
+        axis0 = joystick.get_axis(3)
+        axis1 = joystick.get_axis(4)
+
+        angle_yaw=angles[0]+epsilonyaw*axis0
         angle_yaw=bound(minyawRAD,maxyawRAD,angle_yaw)
 
-        angle_pitch=angles[1]+epsilonpitch*axis_pitch
+        angle_pitch=angles[1]+epsilonpitch*axis1
         angle_pitch=bound(minpitchRAD,maxpitchRAD,angle_pitch)
 
 
-
-        deadzone_front=0.05
-        deadzone_slide=0.05       
-        limit_front=0.5
-        limit_slide=1
-        axis_front =(-1)*joystick.get_axis(1)
-        axis_slide = (-1)*joystick.get_axis(0)
-        xdot=deadzone(deadzone_front,axis_front)*limit_front
-        slidedot=deadzone(deadzone_slide,axis_slide)*limit_slide
-
-        if mode==CLASSIQUE:
-            thetadot=slidedot
-            almotion.moveToward(xdot, 0, thetadot)
-
-        elif mode==OMNI:
-            ydot=slidedot
-            almotion.moveToward(xdot, ydot, 0 )
-
-        elif mode==STOP:
-            almotion.moveToward(0, 0, 0 )
-       
+        
 
         angles = [angle_yaw, angle_pitch]
         print("angles:")
         print(angles)
         almotion.setAngles(names,angles,0.1)
-    
+        print(axis0)
 
 
         buttons = joystick.get_numbuttons()
-        button_start = joystick.get_button(3)
-        if button_start and ( button_start != button_start_old):
-            start=1
-        if start==1:
-            start=0
-            altext.say("Record Video Start")
-            name='PEPPER_'+(str((datetime.now())).replace(' ','-'))[:-7]
-            vrecorder.startRecording(dir, name)
-        button_start_old=button_start
-
-
-        button_stop = joystick.get_button(1)
-        if button_stop and (button_stop != button_stop_old):
-            stop=1
-        if stop==1:
-            stop=0
-            vrecorder.stopRecording()
-            altext.say("Record Video Stop")
-        button_stop_old=button_stop
-
-
-        button_stop_old=button_stop
-       
+        button0 = joystick.get_button(0)
+        button1 = joystick.get_button(1)
+        print(button0)
 
 
         hats = joystick.get_numhats()

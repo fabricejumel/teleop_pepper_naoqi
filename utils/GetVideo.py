@@ -39,10 +39,14 @@ def main(session,dir,name,quality):
 	almotion.setAngles(names,angles,0.1)
     except Exception, e:
         print "Error was: ", e
-    alphoto.takePictures(1, dir, name)
+    for i in range (0,8):
+        alphoto.setResolution(i)
+        name2=name + ':RES:' + str(i)
+        alphoto.takePictures(1, dir, name2)
 
+    
     vrecorder.setFrameRate(10.0)
-    vrecorder.setResolution(quality) # 2 Set resolution to VGA (640 x 480)
+    vrecorder.setResolution(quality) # 0 (QQVGA), 1 (QVGA) or 2 (VGA) , 2 Set resolution to VGA (640 x 480)
 
     vrecorder.startRecording(dir, name)
     print "Video record started."
@@ -53,7 +57,7 @@ def main(session,dir,name,quality):
     print "Video was saved on the robot: ", videoInfo[1]
     print "Total number of frames: ", videoInfo[0]
     
-"""     for j in range(-40,36,5):
+    """     for j in range(-40,36,5):
 	    first=1
 	    for i in range(-20,20,5):
 		angles[0]=i*almath.TO_RAD
@@ -90,18 +94,19 @@ def main(session,dir,name,quality):
     #except Exception, e:
         #print "Error was: ", e
 
-    #try:
-        #raw_input("\n Press Enter when finished:")
-    #finally:
+    try:
+        raw_input("\n Press Enter when finished:")
+    finally:
+        almotion.setStiffnesses("Head", 0.1)
         # stopping the dialog engine
-        #ALDialog.unsubscribe('simple')
+        # ALDialog.unsubscribe('simple')
 
         # Deactivating the topic
-        #ALDialog.deactivateTopic(topic_name)
+        # ALDialog.deactivateTopic(topic_name)
 
         # now that the dialog engine is stopped and there are no more activated topics,
         # we can unload our topic and free the associated memory
-        #ALDialog.unloadTopic(topic_name)
+        # ALDialog.unloadTopic(topic_name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
