@@ -45,11 +45,17 @@ def main(session,joy_id,dir,name,quality):
 
     except Exception, e:
         print "Error was: ", e
-	
+    almotion.rest()
+    name = "All"
+    enable  = False
+    almotion.setExternalCollisionProtectionEnabled(name, enable)
+    almotion.setOrthogonalSecurityDistance(0.01)
+    almotion.setTangentialSecurityDistance(0.01)
     almotion.wakeUp()
     names = ["HeadYaw","HeadPitch"]
     angles = [0,0]
     almotion.setAngles(names,angles,0.1)
+
     # try:
 	# almotion.setAngles(names,angles,0.1)
     # except Exception, e:
@@ -140,7 +146,7 @@ def main(session,joy_id,dir,name,quality):
         pygame.event.get()
         name = joystick.get_name()
         axes = joystick.get_numaxes()
-        epsilonyaw=0.02
+        epsilonyaw=0.04
         minyawRAD=-2
         maxyawRAD=2
 
@@ -148,7 +154,7 @@ def main(session,joy_id,dir,name,quality):
         minpitchRAD=-0.33
         maxpitchRAD=0.33
         
-        axis_yaw = joystick.get_axis(3)
+        axis_yaw = (-1)*joystick.get_axis(3)
         axis_pitch = joystick.get_axis(4)
 
         angle_yaw=angles[0]+epsilonyaw*axis_yaw
@@ -160,7 +166,8 @@ def main(session,joy_id,dir,name,quality):
 
 
         deadzone_front=0.05
-        deadzone_slide=0.05       
+        deadzone_slide=0.05
+
         limit_front=0.5
         limit_slide=1
         axis_front =(-1)*joystick.get_axis(1)
@@ -170,11 +177,22 @@ def main(session,joy_id,dir,name,quality):
 
         if mode==CLASSIQUE:
             thetadot=slidedot
-            almotion.moveToward(xdot, 0, thetadot)
+            ydot=0
+            hat0 = joystick.get_hat(0)
+            if hat0 != (0,0):
+                limit_omni=1
+                xdot=hat0[1]*limit_omni
+                ydot=(-1)*hat0[0]*limit_omni
+            almotion.moveToward(xdot, ydot, thetadot)
 
         elif mode==OMNI:
             ydot=slidedot
+
             almotion.moveToward(xdot, ydot, 0 )
+            
+            
+
+            almotion.moveToward(x_dot, y_dot, 0 )
 
         elif mode==STOP:
             almotion.moveToward(0, 0, 0 )
@@ -208,15 +226,12 @@ def main(session,joy_id,dir,name,quality):
             altext.say("Record Video Stop")
         button_stop_old=button_stop
 
-
-        button_stop_old=button_stop
        
 
 
-        hats = joystick.get_numhats()
+ 
 
-        hat0 = joystick.get_hat(0)
-        print(hat0)
+ 
 
         clock.tick(30)
     

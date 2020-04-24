@@ -42,6 +42,10 @@ gst-launch-0.10 -v v4l2src device=/dev/video0 ! 'video/x-raw-yuv,width=320, heig
 PC :    
 gst-launch-0.10 -v udpsrc port=3000 ! application/x-rtp, encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegdec ! autovideosink
 
+
+
+
+
     gst-launch-0.10 -v v4l2src device=/dev/video-top ! video/x-raw-yuv,width=640,height=480,framerate=30/1 ! ffmpegcolorspace ! jpegenc ! multipartmux! tcpserversink port=3000
 
 ... and then you can open the stream from your computer, for example with vlc:
@@ -201,6 +205,173 @@ ALServiceManager.stop("ALTactileGesture-serv")
 (I just tested it, it works fine)
 
 (edit) by the way, I'm not sure that actually stopping and starting ALTactileGesture is the best way of doing what you're trying to do (it seems a bit hacky to me), but if you want to do it that way, this is how :)
+
+
+
+
+External-collision avoidance API
+On this page
+
+NAOqi Motion - Overview | API
+Method list
+
+class ALMotionProxy
+
+    ALMotionProxy::getChainClosestObstaclePosition
+    ALMotionProxy::getExternalCollisionProtectionEnabled
+    ALMotionProxy::getOrthogonalSecurityDistance
+    ALMotionProxy::getTangentialSecurityDistance
+    ALMotionProxy::setExternalCollisionProtectionEnabled
+    ALMotionProxy::setOrthogonalSecurityDistance
+    ALMotionProxy::setTangentialSecurityDistance
+
+Event list
+
+    ALMotion/Safety/ChainVelocityClipped()
+    ALMotion/MoveFailed()
+
+Methods
+
+std::vector<float> ALMotionProxy::getChainClosestObstaclePosition(const std::string& chainName, const int& frame)
+
+    Gets, for a specified chain, the position, relative to the specified frame, of the closest obstacle.
+    Parameters:	
+
+        chainName – The chain name {“LArm” or “RArm”}.
+        frame – Task frame {FRAME_TORSO = 0, FRAME_WORLD = 1, FRAME_ROBOT = 2}.
+
+    Returns:	
+
+    Vector containing the AL::Math::Position3D of obstacle in meters (x, y, z).
+
+bool ALMotionProxy::getExternalCollisionProtectionEnabled(const std::string& name)
+
+    Checks if the external collision protection is activated on the given name.
+    Parameters:	
+
+        name – The name {“All”, “Move”, “Arms”, “LArm” or “RArm”}.
+
+    Returns:	
+
+    Return true if the external collision protection of the given name is activated.
+
+float ALMotionProxy::getOrthogonalSecurityDistance()
+
+    Gets the current orthogonal security distance used to check dangerous obstacles.
+    Returns:	distance in meters between any part of the robot and any obstacle in the direction of the motion.
+
+    It defines the security area in which any obstacle detection stops the robot.
+
+    Default value: 0.4m.
+
+float ALMotionProxy::getTangentialSecurityDistance()
+
+    Gets the current tangential security distance used to check dangerous obstacles.
+    Returns:	distance in meters between any part of the robot and any obstacle.
+
+    It defines the security area in which any obstacle detection stops the robot.
+
+    Default value: 0.1m.
+
+void ALMotionProxy::setExternalCollisionProtectionEnabled(const std::string& name, const bool& enable)
+    nao NAO 	Enable/disable external collision protection of the robot.
+    pepp Pepper 	
+
+    Enable/disable external collision protection of the robot, but only if allowed by the owner.
+
+    If not allowed, an exception is thrown.
+
+        “All” and “Move” deactivation require the owner consent on Pepper,
+        “Arms”, “LArm” and “RArm” deactivation does not require the owner consent.
+
+    For further details, see: Deactivation of non-critical safety reflexes.
+    Parameters:	
+
+        name – The name {“All”, “Move”, “Arms”, “LArm” or “RArm”}.
+        enable – Activate or deactivate the external collision of the desired name.
+
+    almotion_setExternalCollisionProtectionEnabled.py
+
+    #! /usr/bin/env python
+    # -*- encoding: UTF-8 -*-
+
+    """Example: Use setExternalCollisionProtectionEnabled Method"""
+
+    import qi
+    import argparse
+    import sys
+
+
+    def main(session):
+        """
+        This example uses the setExternalCollisionProtectionEnabled method.
+        """
+        # Get the service ALMotion.
+
+        motion_service  = session.service("ALMotion")
+
+        # Example showing how to activate "Move", "LArm" and "RArm" external anti collision
+        name = "All"
+        enable  = True
+        motion_service.setExternalCollisionProtectionEnabled(name, enable)
+
+        # Example showing how to deactivate "LArm" external anti collision
+        name = "LArm"
+        enable = False
+        motion_service.setExternalCollisionProtectionEnabled(name, enable)
+
+    if __name__ == "__main__":
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--ip", type=str, default="127.0.0.1",
+                            help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
+        parser.add_argument("--port", type=int, default=9559,
+                            help="Naoqi port number")
+
+        args = parser.parse_args()
+        session = qi.Session()
+        try:
+            session.connect("tcp://" + args.ip + ":" + str(args.port))
+        except RuntimeError:
+            print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
+                   "Please check your script arguments. Run with -h option for help.")
+            sys.exit(1)
+        main(session)
+
+void ALMotionProxy::setOrthogonalSecurityDistance(const float& distance)
+
+    Defines the orthogonal security distance.
+    Parameters:	
+
+        distance – distance in meters. See ALMotionProxy::getOrthogonalSecurityDistance.
+
+void ALMotionProxy::setTangentialSecurityDistance(const float& distance)
+
+    Defines the tangential security distance.
+    Parameters:	
+
+        distance – distance in meters. See ALMotionProxy::getTangentialSecurityDistance.
+
+Events
+
+Event: "ALMotion/Safety/ChainVelocityClipped"
+callback(std::string eventName, AL::ALValue val, std::string subscriberIdentifier)
+
+    Raised when a chain velocity is clipped because an obstacle is too close.
+    Parameters:	
+
+        eventName (std::string) – “ALMotion/Safety/ChainVelocityClipped”
+        val – [[“ChainName”, obstaclePosition], ...] obstaclePosition: [x, y, z] Position3D in FRAME_WORLD.
+        subscriberIdentifier (std::string) –
+
+Event: "ALMotion/MoveFailed"
+callback(std::string eventName, AL::ALValue val, std::string subscriberIdentifier)
+
+    Raised when a move command fails.
+    Parameters:	
+
+        eventName (std::string) – “ALMotion/MoveFailed”
+        val – [Cause, Status, Obstacle position] Cause: Reason of move failed std::string (“Safety”, “Internal stop”, ...). Status: 0 move not started, 1 move started but stopped. Obstacle position: Position3D of obstacle in FRAME_WORLD.
+        subscriberIdentifier (std::string) –
 
 
 
